@@ -1,0 +1,30 @@
+{
+  "name": "RandomCoffeeBot",
+  "version": "1.0.0",
+  "license": "MIT",
+  "scripts": {
+    "start": "babel-node bot.js",
+    "watch": "nodemon --exec \"babel-node bot.js\""
+  },
+  "dependencies": {
+    "chalk": "^4.0.0",
+    "commander": "^5.1.0",
+    "sequelize": "^5.21.12",
+    "slimbot": "^4.8.0",
+    "sqlite3": "^4.2.0"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.10.2",
+    "@babel/node": "^7.10.1",
+    "@babel/preset-env": "^7.10.2",
+    "nodemon": "^2.0.4"
+  },
+  "babel": {
+    "presets": [
+      "@babel/preset-env"
+    ]
+  },
+  "browserslist": [
+    "node 12"
+  ]
+}
