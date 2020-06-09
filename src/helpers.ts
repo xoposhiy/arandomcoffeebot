@@ -1,6 +1,10 @@
-export const makePairs = (users, currentPairs) => {
+import { User } from './types';
+
+type PairArray = [User['nickname'], User['nickname']];
+
+export const makePairs = (users: User['nickname'][], currentPairs: PairArray[]) => {
     console.log(users, currentPairs);
-    const pairs = [];
+    const pairs: PairArray[] = [];
     let availableUsers = [...users];
     let i = 0;
     while (availableUsers.length > 1 && i < users.length) {

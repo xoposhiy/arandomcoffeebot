@@ -1,6 +1,6 @@
 import Slimbot from 'slimbot';
 import { program } from 'commander';
-import chalk from 'chalk';
+import { red, green, yellow } from 'chalk';
 
 import { getDbTools } from './src/db';
 import {
@@ -23,13 +23,13 @@ if (!apiKey) {
 }
 
 if (!apiKey) {
-    console.error(chalk.red('Необходимо указать ключ API бота. yarn start -key "YOUR:KEY"'));
+    console.error(red('Необходимо указать ключ API бота. yarn start -key "YOUR:KEY"'));
     process.exit();
 }
 
 (async () => {
     let dbTools = await getDbTools();
-    console.log(chalk.yellow('Текущие настройки'), await dbTools.getConfig());
+    console.log(yellow('Текущие настройки'), await dbTools.getConfig());
     await dbTools.setConfigOption('confirmation', 1);
     const slimbot = new Slimbot(apiKey);
 
@@ -126,8 +126,8 @@ if (!apiKey) {
                             const user2 = users.find(user => user.nickname === nickname2);
                             // slimbot.sendMessage(user1.id, `Вы в паре с ${user2.nickname}`);
                             // slimbot.sendMessage(user2.id, `Вы в паре с ${user1.nickname}`);
-                            console.log(user1.id, user2.nickname);
-                            console.log(user2.id, user1.nickname);
+                            console.log(user1?.id, user2?.nickname);
+                            console.log(user2?.id, user1?.nickname);
                         });
                     }
                     return;
@@ -140,5 +140,5 @@ if (!apiKey) {
     });
 
     slimbot.startPolling();
-    console.log(chalk.green('Бот запущен'));
+    console.log(green('Бот запущен'));
 })();

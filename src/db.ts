@@ -1,7 +1,23 @@
+import { Config, DeletedUser, Pair, User } from './types';
+
 const sqlite3 = require('sqlite3').verbose();
 const db = new sqlite3.Database('db');
 
-export const getDbTools = () => {
+type Tools = {
+    getConfig(): Promise<Config>;
+    setConfigOption(option: keyof Config, value: number | string): Promise<void>;
+    getAllUsers(active?: boolean | null): Promise<User[]>;
+    getAllDeletedUsers(): Promise<DeletedUser[]>;
+    getAllPairs(orderId?: Pair['orderId'] | null): Promise<Pair[]>;
+    getLastPairOrderId(): Promise<Pair['orderId']>;
+    addUser(nickname: User['nickname'], id: User['id'], active?: User['active']): Promise<void>;
+    confirmUser(nickname: User['nickname']): Promise<void>;
+    deleteUser(nickname: User['nickname']): Promise<void>;
+    resetUsers(): Promise<void>;
+    addPair(nickname1: Pair['nickname1'], nickname2: Pair['nickname2'], orderId: Pair['orderId']): Promise<void>;
+}
+
+export const getDbTools = (): Promise<Tools> => {
     return new Promise(returnDbTools => {
         db.serialize(async function() {
             const execute = (command, ...rest) => {
