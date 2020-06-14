@@ -2,7 +2,7 @@ version: '2.0'
 services:
   bot:
     build: .
-    command: ["--key", "1244313034:AAHeNlSyyRuoddH0UIrnXNjIWA7Q1CmLx80"]
+    command: ["--key", "1202064945:AAH7r3cr9xErXMxZlQ7eORK7yvVj19C6NlQ"]
     volumes: 
       - ./:/data
     environment:

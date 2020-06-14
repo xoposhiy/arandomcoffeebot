@@ -69,3 +69,8 @@ let test_pairs8: PairArray[] = [['a', 'kataeva']];
 let result8: PairArray[] = makePairs(test_users8, test_pairs8)
 
 deepStrictEqual(result8, []) 
+
+
+
+
+deepStrictEqual(makePairs([ 'Kris_polyakova', 'kaktus_katya' ], [ [ 'Kris_polyakova', 'kataev' ], [ 'kataeva', 'kaktus_katya' ] ]),[['Kris_polyakova', 'kaktus_katya']])
