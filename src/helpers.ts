@@ -1,9 +1,8 @@
-import { User } from './types';
+import { User , PairArray} from './types';
 
-type PairArray = [User['nickname'], User['nickname']];
 
 export const makePairs = (users: User['nickname'][], currentPairs: PairArray[]) => {
-    console.log(users, currentPairs);
+    console.log("make pair input", users, currentPairs);
     const pairs: PairArray[] = [];
     let availableUsers = [...users];
     let i = 0;
@@ -22,7 +21,12 @@ export const makePairs = (users: User['nickname'][], currentPairs: PairArray[]) 
         }
     }
     if (availableUsers.length !== 0) {
-        pairs.push([availableUsers[0], 'kataeva']);
+        let orphan = availableUsers[0];
+        if (orphan !== 'kataeva') {
+            if (!currentPairs.some(([u1, u2]) => (u1 === orphan && u2 === 'kataeva') || (u2 === orphan && u1 === 'kataeva'))) {
+                pairs.push([orphan, 'kataeva']);
+            }
+        }
     }
     return pairs;
 };

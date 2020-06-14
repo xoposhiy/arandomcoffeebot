@@ -1,0 +1,10 @@
+version: '2.0'
+services:
+  bot:
+    build: .
+    command: ["--key", "1244313034:AAHeNlSyyRuoddH0UIrnXNjIWA7Q1CmLx80"]
+    volumes: 
+      - ./:/data
+    environment:
+      DB_PATH: "/data/bot.db"
+    restart: always

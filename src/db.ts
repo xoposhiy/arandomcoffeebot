@@ -1,12 +1,12 @@
 import { Config, DeletedUser, Pair, User } from './types';
 
 const sqlite3 = require('sqlite3').verbose();
-const db = new sqlite3.Database('db');
+const db = new sqlite3.Database(process.env.DB_PATH || 'db');
 
 type Tools = {
     getConfig(): Promise<Config>;
     setConfigOption(option: keyof Config, value: number | string): Promise<void>;
-    getAllUsers(active?: boolean | null): Promise<User[]>;
+    getAllUsers(active?: Number | null): Promise<User[]>;
     getAllDeletedUsers(): Promise<DeletedUser[]>;
     getAllPairs(orderId?: Pair['orderId'] | null): Promise<Pair[]>;
     getLastPairOrderId(): Promise<Pair['orderId']>;
@@ -24,6 +24,7 @@ export const getDbTools = (): Promise<Tools> => {
                 return new Promise((resolve, reject) => {
                     db.run(command, ...rest, (err, res) => {
                         if (err) {
+                            console.log(err);
                             reject(err);
                         } else {
                             resolve(res);
@@ -39,7 +40,9 @@ export const getDbTools = (): Promise<Tools> => {
                     execute('CREATE TABLE deletedUsers (nickname varchar(255))'),
                     execute('CREATE TABLE config (confirmation int)')
                 ]);
-            } catch (e) {}
+            } catch (e) {
+                console.log(e);
+            }
 
             returnDbTools({
                 getConfig: () => {
@@ -58,10 +61,11 @@ export const getDbTools = (): Promise<Tools> => {
                 setConfigOption: async (option, value) => {
                     await execute(`UPDATE config SET ${option} = ?`, value);
                 },
-                getAllUsers: (active = null) => {
+                getAllUsers: (active = 1) => {
                     return new Promise(resolve => {
-                        if (active) {
-                            db.all('SELECT * FROM users WHERE active = 1', (err, res) => resolve(res));
+                        console.log(active);
+                        if (active !== null) {
+                            db.all('SELECT * FROM users WHERE active = ?', active, (err, res) => resolve(res));
                         } else {
                             db.all('SELECT * FROM users', (err, res) => resolve(res));
                         }
@@ -75,9 +79,9 @@ export const getDbTools = (): Promise<Tools> => {
                 getAllPairs: (orderId = null) => {
                     return new Promise(resolve => {
                         if (orderId !== null) {
-                            db.all('SELECT * FROM pairs WHERE orderId = ?', orderId, (err, res) => resolve(res));
+                            db.all('SELECT nickname1, nickname2 FROM pairs WHERE orderId = ?', orderId, (err, res) => resolve(res));
                         } else {
-                            db.all('SELECT * FROM pairs', (err, res) => resolve(res));
+                            db.all('SELECT nickname1, nickname2 FROM pairs', (err, res) => resolve(res));
                         }
                     });
                 },
