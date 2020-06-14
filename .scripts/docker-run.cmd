@@ -1,0 +1,2 @@
+docker run -it --rm -e DB_PATH=/data/bot.db -v C:\tmp\random-coffee-bot\data:/data registry.kontur.host/library/wc2020/random-coffee-bot:latest --key 1220459500:AAEXgpeVcH55eIxjf8fXKxuTkes5bcKzPHc
+pause

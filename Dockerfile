@@ -7,8 +7,6 @@ RUN yarn install
 COPY ./tsconfig.json ./
 COPY ./babel.config.js ./
 
-
-
 COPY ./bot.ts ./
 COPY ./src src/
 
