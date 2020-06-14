@@ -35,7 +35,7 @@ export const getDbTools = (): Promise<Tools> => {
 
             try {
                 await Promise.allSettled([
-                    execute('CREATE TABLE users (nickname varchar(255), id varchar(255), active int)'),
+                    execute('CREATE TABLE users (nickname varchar(255), id varchar(255) UNIQUE, active int)'),
                     execute('CREATE TABLE pairs (nickname1 varchar(255), nickname2 varchar2(255), orderId int)'),
                     execute('CREATE TABLE deletedUsers (nickname varchar(255))'),
                     execute('CREATE TABLE config (confirmation int)')
@@ -92,19 +92,14 @@ export const getDbTools = (): Promise<Tools> => {
                 },
                 addUser: (nickname, id, active = 0) => {
                     return new Promise(resolve => {
-                        db.get(`SELECT * FROM users WHERE nickname = ?`, nickname, (err, user) => {
-                            if (!user) {
                                 db.run(
-                                    `INSERT INTO users (nickname, id, active) VALUES (?, ?, ?)`,
+                                    `INSERT INTO users (nickname, id, active) VALUES (?, ?, ?) ON CONFLICT DO NOTHING`,
                                     nickname,
                                     id,
                                     active,
                                     (err, res) => resolve(res)
                                 );
-                            } else {
                                 resolve();
-                            }
-                        });
                     });
                 },
                 confirmUser: async nickname => {
