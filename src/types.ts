@@ -15,3 +15,4 @@ export type Pair = {
 }
 
 export type DeletedUser = Pick<User, 'nickname'>;
+export type PairArray = [User['nickname'], User['nickname']];
