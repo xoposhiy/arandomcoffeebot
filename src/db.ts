@@ -35,10 +35,10 @@ export const getDbTools = (): Promise<Tools> => {
 
             try {
                 await Promise.allSettled([
-                    execute('CREATE TABLE users (nickname varchar(255), id varchar(255) UNIQUE, active int)'),
-                    execute('CREATE TABLE pairs (nickname1 varchar(255), nickname2 varchar2(255), orderId int)'),
-                    execute('CREATE TABLE deletedUsers (nickname varchar(255))'),
-                    execute('CREATE TABLE config (confirmation int)')
+                    execute('CREATE TABLE IF NOT EXISTS users (nickname varchar(255), id varchar(255) UNIQUE, active int)'),
+                    execute('CREATE TABLE IF NOT EXISTS pairs (nickname1 varchar(255), nickname2 varchar2(255), orderId int)'),
+                    execute('CREATE TABLE IF NOT EXISTS deletedUsers (nickname varchar(255))'),
+                    execute('CREATE TABLE IF NOT EXISTS config (confirmation int)')
                 ]);
             } catch (e) {
                 console.log(e);

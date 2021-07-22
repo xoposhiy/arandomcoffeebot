@@ -1,26 +1,30 @@
 import Slimbot from 'slimbot';
 import { program } from 'commander';
 import { red, green, yellow } from 'chalk';
+const fs = require('fs');
+const CSON = require('cson')
 
 import { getDbTools } from './src/db';
 import {
-    ADMINS,
     START_COMMANDS,
     STOP_COMMANDS,
     HELP_COMMANDS,
     CONFIRM_COMMANDS,
     DECLINE_COMMANDS,
-    RESERVED_USERS
 } from './src/const';
 import { makePairs } from './src/helpers';
 
-let apiKey = process.env.npm_config_apikey;
+program.option('-k, --key <type>', 'api key');
+program.option('-s, --settings <settings.cson>', 'file with custom settings in CSON format');
+program.parse(process.argv);
 
-if (!apiKey) {
-    program.option('-k, --key <type>', 'api key');
-    program.parse(process.argv);
-    apiKey = program.key;
-}
+let apiKey = process.env.npm_config_apikey || program.key;
+let messagesFile = process.env.npm_config_settings || program.settings || "settings.cson";
+let settings = CSON.parse(fs.readFileSync(messagesFile));
+
+let ADMINS = settings.admins;
+let RESERVED_USERS = settings.reserved_users;
+let messages = settings.messages;
 
 if (!apiKey) {
     console.error(red('Необходимо указать ключ API бота. yarn start -key "YOUR:KEY"'));
@@ -68,19 +72,17 @@ class Slimbot2 extends Slimbot {
 
     slimbot.on('message', async ({ text = '', chat: { username, id: chatId } }) => {
         try {
-            const config = await dbTools.getConfig();
+			const config = await dbTools.getConfig();
             const message = text.toLowerCase();
             if (START_COMMANDS.includes(message)) {
                 if (RESERVED_USERS.includes(username)) {
                     console.log(username);
 
                     await dbTools.addUser(username, chatId, 1);
-                    slimbot.sendMessage(chatId, "Теперь ты резервный пользователь")
-                    return;
+                    slimbot.sendMessage(chatId, "Ты резервный пользователь. Если кому-то не хватит пары, он будет общаться с тобой :)")
                 }
                 if (ADMINS.includes(username)) {
-                    slimbot.sendMessage(chatId, "Теперь ты админ")
-                    return;
+                    slimbot.sendMessage(chatId, "Ты админ, и управляешь всей этой петрушкой!")
                 }
                 if (!username) {
                     slimbot.sendMessage(chatId, `К сожалению, мы не можем добавить тебя в игру, так как ты зарегистрирован в Телеграме без юзернейма. ` +
@@ -95,58 +97,44 @@ class Slimbot2 extends Slimbot {
                     return;
                 }
                 await dbTools.addUser(username, chatId);
-                slimbot.sendMessage(chatId, 
-                    `Привет 👋 \n\nМы в Контуре придумали как компенсировать офлайн-знакомства ` +
-                    `и смоллтоки у кулера в удалённом формате и написали бота, который раз в ` +
-                    `день случайно распределяет всех участников на пары. Игру мы разработали в ` +
-                    `преддверии конференций JUG Ru Group по нашим любимым направлениям. Поэтому в ` +
-                    `основном тут будут обитать дотнет-разработчики, тестировщики и фронтендеры. \n\n` +
-                    
-                    `Ты постучался в бота, а значит, уже вступил в игру. ` +
-                    `Каждая новая итерация знакомств запускается в 12:00 (Мск). За час до этого бот перестанёт принимать новых пользователей на ближайший круг ` +
-                    `и просит всех зарегистрированных юзеров подтвердить участие. Это сделано для того, чтобы никто из желающих пообщаться не остался без пары.\n\n` +
-                    `До скорого кофе 🖤`
-                )
+                slimbot.sendMessage(chatId, messages.start)
+				return;
 
             } else if (STOP_COMMANDS.includes(message)) {
                 await dbTools.deleteUser(username);
+				slimbot.sendMessage(chatId, "Пока-пока!");
+				return;
             } else if (HELP_COMMANDS.includes(message)) {
-                slimbot.sendMessage(chatId, 
-                        `Ты можешь общаться с ботом при помощи этих команд: \n` +
-                        `/start — стать участником \n` +
-                        `/stop — выйти из игры \n\n` +
-                        
-                        `/help — получить список доступных команд \n\n` +
-                        
-                        `В 11:00 (Мск) бот попросит тебя подтвердить участие в ближайшем круге. Ты сможешь:\n` +
-                        `— согласиться при помощи команды /go, \n` +
-                        `— отказаться на сутки командой /nottoday \n` +
-                        `— или остановить бота командой /stop.`
-                    );
+                slimbot.sendMessage(chatId, messages.help);
+				if (ADMINS.includes(username)){
+					slimbot.sendMessage(chatId, 
+							`А ещё ты админ, а значит можешь делать следующее: \n` +
+							`/users — посмотреть всех зарегистрированных пользователей.\n` +
+							`/dusers — посмотреть всех, кто прекратил работу бота командой \stop\n` +
+							
+							`/reminder — отправить всем пользователям предложение подтвердить своё участие в ближайшем круге знакомств\n` +
+							`/mix —  сгенерировать из всех подтвердивших новый набор пар и записать его в базу (чтобы потом не повторять пары)\n` +
+							`/pairs — посмотреть все сгенерированные пары в последний запуск \mix\n` +
+							`/notify — сообщить всем участникам их напарников по беседе.`
+						);
+				}
+				return;
             } else {
                 if (config.confirmation === 1) {
                     if (CONFIRM_COMMANDS.includes(message)) {
                         await dbTools.confirmUser(username);
-                        slimbot.sendMessage(
-                            chatId,
-                            'Отлично! Скоро мы пришлём имя твоего собеседника на сегодня.'
-                        );
+                        slimbot.sendMessage(chatId, messages.confirm);
                         return;
                     }
                     if (DECLINE_COMMANDS.includes(message)) {
-                        slimbot.sendMessage(
-                            chatId,
-                                'Жаль, сегодня не увидимся. До завтра!\n\n' +
-                                `Может, пока посмотришь ТехКонтур.ТВ? 📺\n` +
-                                `https://youtu.be/NSJqnhc3FvI \n\n` +
-                                'Если хочешь остановить бота насовсем, просто введи команду /stop.'
-                        );
+                        slimbot.sendMessage(chatId, messages.decline);
                         return;
                     }
                 }
                 if (ADMINS.includes(username)) {
                     if (message === '/config') {
                         slimbot.sendMessage(chatId, JSON.stringify(config));
+						return;
                     }
                     if (message === '/users') {
                         const users = await dbTools.getAllUsers(null);
@@ -155,15 +143,17 @@ class Slimbot2 extends Slimbot {
                             .forEach(user => {
                                 slimbot.sendMessage(
                                     chatId,
-                                    `${user.active ? 'Активен' : 'Не активен'} | ${user.nickname}: ${user.id}`
+                                    `${user.active ? 'Подтвердил' : 'Не подтвердил'} | ${user.nickname}: ${user.id}`
                                 );
                             });
+						return;
                     }
                     if (message === '/dusers') {
                         const users = await dbTools.getAllDeletedUsers();
                         users.forEach(user => {
                             slimbot.sendMessage(chatId, user.nickname);
                         });
+						return;
                     }
                     if (message === '/pairs') {
                         const lastPairOrderId = await dbTools.getLastPairOrderId();
@@ -174,20 +164,26 @@ class Slimbot2 extends Slimbot {
                         pairs.forEach(({ nickname1, nickname2 }) => {
                             slimbot.sendMessage(chatId, `@${nickname1} & @${nickname2}`);
                         });
+						return;
                     }
                     if (message === '/mix') {
-                        const users = (await dbTools.getAllUsers(1)).filter(user => user.nickname !== RESERVED_USERS[0]);
-                        if (users.length < 2) {
+                        const users = 
+							(await dbTools.getAllUsers(1))
+							.filter(user => !RESERVED_USERS.includes(user.nickname) && !ADMINS.includes(user.nickname));
+							
+                        console.log(users.length + " активных без админов и резервных");
+						if (users.length < 2) {
                             slimbot.sendMessage(chatId, 'Недостаточно пользователей для формирования пар');
                             return;
                         }
                         const pairs = await dbTools.getAllPairs();
                         const newPairs = makePairs(
-                            users.map(user => user.nickname),
-                            pairs.map(pair => [pair.nickname1, pair.nickname2])
+							users.map(user => user.nickname),
+                            pairs.map(pair => [pair.nickname1, pair.nickname2]),
+							RESERVED_USERS
                         );
                         if (!newPairs.length){
-                            slimbot.sendMessage(chatId, `Пары кончились`);
+                            slimbot.sendMessage(chatId, `Пары кончились. Все со всеми поговорили!`);
                             return;
                         }
                         const lastPairOrderId = await dbTools.getLastPairOrderId();
@@ -195,21 +191,16 @@ class Slimbot2 extends Slimbot {
                             await dbTools.addPair(user1, user2, lastPairOrderId + 1);
                             slimbot.sendMessage(chatId, `Составил пару @${user1} c @${user2}`);
                         }
+						return;
                     }
                     if (message === '/reminder') {
                         const users = await dbTools.getAllUsers(0);
 
                         users.forEach((user) => {
-                            slimbot.sendMessage(user.id, 
-                                    `Хелло 😎 Уже через час мы распределим участников на пары. Самое время подтвердить своё участие. Ты можешь:\n` +
-                                    `— согласиться при помощи команды /go, \n` +
-                                    `— отказаться на сутки командой /nottoday \n` +
-                                    `— или остановить бота командой /stop.\n\n` +
-
-                                    `Если запутаешься или забудешь команды, набирай /help.`
-                                );
+                            slimbot.sendMessage(user.id, messages.reminder);
                         })
-                        slimbot.sendMessage(chatId, 'Отправили сообщения пользователям для напоминия');
+                        slimbot.sendMessage(chatId, 'Отправили сообщения пользователям для напоминания');
+						return;
                     }
                     if (message === '/notify') {
                         const users = await dbTools.getAllUsers(null);
@@ -219,20 +210,24 @@ class Slimbot2 extends Slimbot {
                         pairs.forEach(({ nickname1, nickname2 }) => {
                             const user1 = users.find(user => user.nickname === nickname1);
                             const user2 = users.find(user => user.nickname === nickname2);
-                            slimbot.sendMessage(user1.id, `Вжух! Мы нашли тебе собеседника. Сегодня это @${user2.nickname}. Наливай чашечку кофе и скорее договоривайся о созвоне ☕️`);
-                            slimbot.sendMessage(user2.id, `Вжух! Мы нашли тебе собеседника. Сегодня это @${user1.nickname}. Наливай чашечку кофе и скорее договоривайся о созвоне ☕️`);
+                            if (user1)
+								slimbot.sendMessage(user1.id, messages.notification.replace("%USERNAME%", user2.nickname));
+                            if (user2)
+								slimbot.sendMessage(user2.id, messages.notification.replace("%USERNAME%", user1.nickname));
                             console.log(user1?.id, user2?.nickname);
                             console.log(user2?.id, user1?.nickname);
                         });
                         await dbTools.resetUsers();
                         slimbot.sendMessage(chatId, 'Отправили сообщения пользователям для беседы и сбросили активацию');
+						return;
                     }
-                    return; 
                 }
                 slimbot.sendMessage(chatId, 'Бот не знает такую команду. Жми /help для вызова подсказки.');
             }
         } catch (e) {
             console.error(e);
+			if (ADMINS.includes(username))
+				slimbot.sendMessage(chatId, "Ошибка в боте\n\n" + e);
         }
     });
 
