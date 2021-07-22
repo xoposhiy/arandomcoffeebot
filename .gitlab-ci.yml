@@ -1,0 +1,9 @@
+build-job:
+  stage: build
+  script:
+    - npm i
+
+deploy-prod:
+  stage: deploy
+  script:
+    - npm start
