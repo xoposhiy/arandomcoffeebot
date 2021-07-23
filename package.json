@@ -3,8 +3,7 @@
   "version": "1.0.0",
   "license": "MIT",
   "scripts": {
-    "start": "babel-node -x .ts bot.ts",
-    "watch": "nodemon --exec \"babel-node -x .ts bot.ts \" --inspect bot.ts"
+	"start": "babel-node -x .ts bot.ts"
   },
   "dependencies": {
     "babel-node": "^0.0.1-security",
@@ -15,12 +14,10 @@
     "slimbot": "^4.8.0",
     "sqlite3": "^5.0.2",
     "typescript": "^3.9.5",
-    "yarn": "^1.22.4",
     "@babel/core": "^7.10.2",
     "@babel/node": "^7.10.1",
     "@babel/preset-env": "^7.10.2",
-    "@babel/preset-typescript": "^7.10.1",
-    "nodemon": "^2.0.4"
+    "@babel/preset-typescript": "^7.10.1"
   },
   "babel": {
     "presets": [
